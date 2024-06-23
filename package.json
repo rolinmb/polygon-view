@@ -1,0 +1,21 @@
+{
+  "name": "polygon-view",
+  "version": "1.0.0",
+  "description": "A browser user interface for the polygon.io",
+  "main": "src/main.js",
+  "scripts": {
+    "dev": "webpack --mode development",
+    "prod": "webpack --mode production",
+    "watch": "webpack --watch --mode production"
+  },
+  "type": "module",
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@polygon.io/client-js": "^7.3.2"
+  },
+  "devDependencies": {
+    "webpack": "^5.92.1",
+    "webpack-cli": "^5.1.4"
+  }
+}
