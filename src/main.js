@@ -1,16 +1,16 @@
-/*function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}*/
-
 import { restClient } from '@polygon.io/client-js';
 import { API_KEY } from './utils.mjs';
 const polygon = restClient(API_KEY);
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 const ticker = 'SPY';
-/*const optionChain = {
+const optionChain = {
   'Calls': {},
   'Puts': {},
-};*/
+};
 var expirations = [];
 
 async function getChainExpirations() {
@@ -25,52 +25,54 @@ async function getChainExpirations() {
   try {
     const data = await polygon.reference.optionsContracts(query);
     data.results.forEach(contract => {
-      expirations.push(contract["expiration_date"]);
+      expirations.push(contract['expiration_date']);
     });
   } catch (e) {
-    console.error("An error occured while fetching option chain expirations:", e);
+    console.error('An error occured while fetching option chain expirations:', e);
+  }
+}
+
+async function fetchOptionChain() {
+  for (const expiry of expirations) {
+    let query = {
+      'underlying_ticker': ticker,
+      'contract_type': 'call',
+      'expiration_date': expiry,
+      'strike_price.gt': 0,
+      'expired': false,
+      'limit': 1000,
+      'sort': 'expiration_date',
+    };
+    try {
+      const callData = await polygon.reference.optionsContracts(query);
+      optionChain['Calls'][expiry] = callData;
+      console.log(`Fetched ${ticker} Calls for ${expiry}`);
+    } catch (e) {
+      console.error('An error occurred while fetching call options:', e);
+    }
+    query['contract_type'] = 'put';
+    await sleep(12000);
+    try {
+      const putData = await polygon.reference.optionsContracts(query);
+      optionChain['Puts'][expiry] = putData;
+      console.log(`Fetched ${ticker} Puts for ${expiry}`);
+    } catch (e) {
+      console.error('An error occurred while fetching put options:', e);
+    }
+    await sleep(12000);
   }
 }
 
 getChainExpirations().then(() => {
-  console.log(ticker+" Option Chain Expirations Successfully fetched:");
-  expirations.forEach(expiry => {
-    console.log(expiry);
+  console.log('\n'+ticker+' Option Chain Expirations Successfully fetched\n');
+  sleep(12000).then(() => {
+    fetchOptionChain().then(() => {
+      console.log('\n'+ticker+' Option Chain Successfully fetched\n');
+      console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
+      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
+    });
   });
 });
-
-/*async function fetchOptionChain() {
-  let query = {
-    'underlying_ticker': ticker,
-    'contract_type': 'call',
-    'expiration_date': '2024-06-25',
-    'strike_price.gt': 0,
-    'expired': false,
-    'limit': 1000,
-    'sort': 'expiration_date',
-  };
-  try {
-    const callData = await polygon.reference.optionsContracts(query);
-    optionChain['Calls'] = callData;
-    console.log(`Fetched ${ticker} Calls`);
-  } catch (e) {
-    console.error("An error occurred while fetching call options:", e);
-  }
-  query['contract_type'] = 'put';
-  try {
-    const putData = await polygon.reference.optionsContracts(query);
-    optionChain['Puts'] = putData;
-    console.log(`Fetched ${ticker} Puts`);
-  } catch (e) {
-    console.error("An error occurred while fetching put options:", e);
-  }
-}
-
-fetchOptionChain().then(() => {
-  console.log(ticker+' Option Chain Successfully fetched:');
-  console.log('\nCalls:\n', optionChain['Calls']);
-  console.log('\nPuts:\n', optionChain['Puts']);
-});*/
 
 /*let query_params = {
   'underlying_ticker': ticker,
