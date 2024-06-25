@@ -7,16 +7,43 @@ import { API_KEY } from './utils.mjs';
 const polygon = restClient(API_KEY);
 
 const ticker = 'SPY';
-const optionChain = {
-  'Calls': [],
-  'Puts': [],
-};
+/*const optionChain = {
+  'Calls': {},
+  'Puts': {},
+};*/
+var expirations = [];
 
-async function fetchOptionChain() {
+async function getChainExpirations() {
   let query = {
     'underlying_ticker': ticker,
     'contract_type': 'call',
-    'as_of': '2024-06-25',
+    'strike_price': 550,
+    'expired': false,
+    'limit': 1000,
+    'sort': 'expiration_date',
+  };
+  try {
+    const data = await polygon.reference.optionsContracts(query);
+    data.results.forEach(contract => {
+      expirations.push(contract["expiration_date"]);
+    });
+  } catch (e) {
+    console.error("An error occured while fetching option chain expirations:", e);
+  }
+}
+
+getChainExpirations().then(() => {
+  console.log(ticker+" Option Chain Expirations Successfully fetched:");
+  expirations.forEach(expiry => {
+    console.log(expiry);
+  });
+});
+
+/*async function fetchOptionChain() {
+  let query = {
+    'underlying_ticker': ticker,
+    'contract_type': 'call',
+    'expiration_date': '2024-06-25',
     'strike_price.gt': 0,
     'expired': false,
     'limit': 1000,
@@ -24,7 +51,7 @@ async function fetchOptionChain() {
   };
   try {
     const callData = await polygon.reference.optionsContracts(query);
-    optionChain['Calls'].push(callData);
+    optionChain['Calls'] = callData;
     console.log(`Fetched ${ticker} Calls`);
   } catch (e) {
     console.error("An error occurred while fetching call options:", e);
@@ -32,7 +59,7 @@ async function fetchOptionChain() {
   query['contract_type'] = 'put';
   try {
     const putData = await polygon.reference.optionsContracts(query);
-    optionChain['Puts'].push(putData);
+    optionChain['Puts'] = putData;
     console.log(`Fetched ${ticker} Puts`);
   } catch (e) {
     console.error("An error occurred while fetching put options:", e);
@@ -43,7 +70,7 @@ fetchOptionChain().then(() => {
   console.log(ticker+' Option Chain Successfully fetched:');
   console.log('\nCalls:\n', optionChain['Calls']);
   console.log('\nPuts:\n', optionChain['Puts']);
-});
+});*/
 
 /*let query_params = {
   'underlying_ticker': ticker,
