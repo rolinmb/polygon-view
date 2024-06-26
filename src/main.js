@@ -5,8 +5,8 @@ const polygon = restClient(API_KEY);
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-
-const ticker = 'SPY';
+// Seems to only allow SPY / QQQ / DIA / IWM etf tickers with free API access
+const ticker = 'DIA';
 const optionChain = {
   'Calls': {},
   'Puts': {},
@@ -68,8 +68,18 @@ getChainExpirations().then(() => {
   sleep(12000).then(() => {
     fetchOptionChain().then(() => {
       console.log('\nFetched '+ticker+' Full Option Chain:\n');
-      console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
-      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
+      for (const expiry of expirations) {
+        console.log(`\n${ticker} ${expiry} Calls:\n`);
+        for (const call in optionChain['Calls'][expiry]) {
+          console.log(call.results);
+        }
+        console.log(`\n${ticker} ${expiry} Puts:\n`);
+        for (const put in optionChain['Puts'][expiry]) {
+          console.log(put.results);
+        }
+      }
+      /*console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
+      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);*/
     });
   });
 });
