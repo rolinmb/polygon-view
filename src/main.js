@@ -45,8 +45,15 @@ async function fetchOptionChain() {
     };
     try {
       const callData = await polygon.reference.optionsContracts(query);
-      optionChain['Calls'][expiry] = callData;
       console.log(`Fetched ${ticker} ${expiry} Calls`);
+      //console.log(callData.results);
+      optionChain['Calls'][expiry] = callData.results.map(call => new Object(
+        {
+          'ticker': call.ticker,
+          'expiry': call.expiration_date,
+          'strike': call.strike_price,
+        }
+      ));
     } catch (e) {
       console.error('An error occurred while fetching call options:', e);
     }
@@ -54,8 +61,14 @@ async function fetchOptionChain() {
     await sleep(12000);
     try {
       const putData = await polygon.reference.optionsContracts(query);
-      optionChain['Puts'][expiry] = putData;
       console.log(`Fetched ${ticker} ${expiry} Puts`);
+      //console.log(putData.results);
+      optionChain['Puts'][expiry] = putData.results.map(put => new Object({
+          'ticker': put.ticker,
+          'expiry': put.expiration_date,
+          'strike': put.strike_price,
+        }
+      ));
     } catch (e) {
       console.error('An error occurred while fetching put options:', e);
     }
@@ -68,18 +81,8 @@ getChainExpirations().then(() => {
   sleep(12000).then(() => {
     fetchOptionChain().then(() => {
       console.log('\nFetched '+ticker+' Full Option Chain:\n');
-      for (const expiry of expirations) {
-        console.log(`\n${ticker} ${expiry} Calls:\n`);
-        for (const call in optionChain['Calls'][expiry]) {
-          console.log(call.results);
-        }
-        console.log(`\n${ticker} ${expiry} Puts:\n`);
-        for (const put in optionChain['Puts'][expiry]) {
-          console.log(put.results);
-        }
-      }
-      /*console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
-      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);*/
+      console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
+      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
     });
   });
 });
