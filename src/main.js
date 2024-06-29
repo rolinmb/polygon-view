@@ -92,8 +92,10 @@ getChainExpirations().then(() => {
       console.log('\nFetched '+ticker+' Full Option Chain:\n');
       console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
       console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
-      sleep(12000);
-      getOptionChartData(optionChain['Calls']['2024-12-20'][0]['ticker']); // testing fetching option chart data
+      sleep(12000).then(() => {
+        console.log('\nFetched option chart data:\n');
+        getOptionChartData(optionChain['Calls']['2024-12-20'][0]['ticker']); // testing fetching option chart data
+      });  
     });
   });
 });
