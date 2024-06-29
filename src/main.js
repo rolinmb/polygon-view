@@ -76,6 +76,15 @@ async function fetchOptionChain() {
   }
 }
 
+async function getOptionChartData(ticker) {
+  polygon.options.aggregates(ticker, 1, "day", "2020-01-01", "2024-06-29", false, "desc", 50000).then(data => {
+    console.log(`Successfully fetched chart data for option contract ${ticker}`)
+    console.log(data);
+  }).catch(e => {
+    console.error("An error occured while fetching option chart data:", e);
+  });
+}
+
 getChainExpirations().then(() => {
   console.log('\nFetched '+ticker+' Option Chain Expirations\n');
   sleep(12000).then(() => {
@@ -83,13 +92,8 @@ getChainExpirations().then(() => {
       console.log('\nFetched '+ticker+' Full Option Chain:\n');
       console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
       console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
+      sleep(12000);
+      getOptionChartData(optionChain['Calls']['2024-12-20'][0]['ticker']); // testing fetching option chart data
     });
   });
 });
-
-// Test fetching candlesticks for SPY 650 C; expiry Dec 19th 2025
-/*polygon.options.aggregates("O:SPY251219C00650000", 1, "day", "2020-01-01", "2024-06-21", false, "desc", 50000).then(data => {
-  console.log(data);
-}).catch(e => {
-  console.error("An error occured while fetching Polygon.io options api:", e);
-});*/
