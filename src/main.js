@@ -155,7 +155,8 @@ async function getOptionChartData(optionTicker) {
   }
 }
 
-async function main() {
+async function test() {
+  document.querySelector("#chart").innerHTML = '';
   let ticker = tickers[0];
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
@@ -195,8 +196,18 @@ async function main() {
   chart.render();
 }
 
+function initUi() {
+  const tickerList = document.querySelector('#tickers-list');
+  tickers.forEach(tkr => {
+    const tickerLi = document.createElement('li');
+    tickerLi.innerHTML = `<a>${tkr}</a>`;
+    tickerList.appendChild(tickerLi);
+  });
+}
+
 window.onload = function() {
-  main().catch(e => {
+  initUi();
+  test().catch(e => {
     console.error("main.js :: main() function failed to load and/or execute:", e);
   });
 }
