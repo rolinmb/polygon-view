@@ -8,9 +8,10 @@ function sleep(ms) {
 }
 
 const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
+const chainLabels = ['Type', 'Ticker', 'Expiry', 'Strike'];
 const optionChain = {
-  'Calls': {},
-  'Puts': {},
+  Calls: {},
+  Puts: {},
 };
 var expirations = [];
 var chartData = [];
@@ -116,7 +117,7 @@ async function fetchOptionChain(ticker) {
       const callData = await polygon.reference.optionsContracts(query);
       console.log(`Fetched ${ticker} ${expiry} Calls`);
       //console.log(callData.results);
-      optionChain['Calls'][expiry] = callData.results.map(call => (
+      optionChain.Calls[expiry] = callData.results.map(call => (
         {
           'ticker': call.ticker,
           'expiry': call.expiration_date,
@@ -132,7 +133,7 @@ async function fetchOptionChain(ticker) {
       const putData = await polygon.reference.optionsContracts(query);
       console.log(`Fetched ${ticker} ${expiry} Puts`);
       //console.log(putData.results);
-      optionChain['Puts'][expiry] = putData.results.map(put => new Object(
+      optionChain.Puts[expiry] = putData.results.map(put => new Object(
         {
           'ticker': put.ticker,
           'expiry': put.expiration_date,
@@ -148,20 +149,56 @@ async function fetchOptionChain(ticker) {
 
 async function getOptionChartData(optionTicker) {
   try {
-    const data = await polygon.options.aggregates(optionTicker, 1, "day", "2020-01-01", "2024-07-01", false, "desc", 50000);
+    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-01', false, 'desc', 50000);
     chartData = data.results;
   } catch (e) {
-    console.error("getOptionChartData :: An error occured while fetching option chart data:", e);
+    console.error('getOptionChartData :: An error occured while fetching option chart data:', e);
   }
 }
 
 function displayOptionChain() {
-  const chainWrap = document.querySelector("#chain-wrap");
+  const chainWrap = document.querySelector('#chain-wrap');
+  const table = document.createElement('table');
+  table.setAttribute('border', '1');
+  const tHead = document.createElement('thead');
+  const headerRow = document.createElement('tr');
+  chainLabels.forEach(label => {
+    const th = document.createElement('th');
+    th.textContent = label;
+    headerRow.appendChild(th);
+  }); 
+  tHead.appendChild(headerRow);
+  table.appendChild(tHead);
+  const tBody = doucment.createElement('tbody');
+  const addRow = (type, option) => {
+    const newRow = document.createElement('tr');
+    const typeTd = document.createElement('td');
+    typeTd.textContent = type;
+    newRow.appendChild(typeTd);
+    const tickerTd = document.createElement('td');
+    tickerTd.textContent = option.ticker;
+    newRow.appendChild(tickerTd);
+    const expiryTd = document.createElement('td');
+    expiryTd = option.expiry;
+    newRow.appendChild(expiryTd);
+    const strikeTd = document.createElement('td');
+    strikeTd = option.strike;
+    newRow.appendChild(strikeTd);
+    tBody.appendChild(newRow);
+  };
+  for (const expiry in optionChain.Calls) {
+    optionChain.Calls[expiry].forEach(call => addRow('Call', call));
+  }
+  for (const expiry in optionChain.Puts) {
+    optionChain.Puts[expiry].forEach(put => addRow('Put', put));
+  }
+  table.append(tBody);
+  chainWrap.appendChild(table);
 }
 
 async function test() {
-  document.querySelector("#chart").innerHTML = '';
-  document.querySelector("#chain-wrap").innerHTML = '';
+  document.querySelector('#chart').innerHTML = '';
+  document.querySelector('#chain-wrap').innerHTML = '';
   let ticker = tickers[0];
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
@@ -169,7 +206,7 @@ async function test() {
   await fetchOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
   await sleep(12000);
-  const optionTicker = optionChain['Calls']['2024-12-20'][0]['ticker'];
+  const optionTicker = optionChain.Calls['2024-12-20'][0]['ticker'];
   await getOptionChartData(optionTicker);
   console.log(`\nSuccessfully fetched chart data for option contract ${optionTicker}\n`);
   candleData.series.push(
@@ -199,7 +236,7 @@ async function test() {
   candleData.title.text = `${optionTicker} Trading History`;
   var chart = new ApexCharts(document.querySelector("#chart"), candleData);
   chart.render();
-  //displayOptionChain();
+  displayOptionChain();
 }
 
 async function getUnderlying(ticker) {
@@ -210,7 +247,7 @@ async function getUnderlying(ticker) {
   await sleep(12000);
   await fetchOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
-  //displayOptionChain();
+  displayOptionChain();
 }
 
 function initUi() {
