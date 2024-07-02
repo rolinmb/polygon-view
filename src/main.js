@@ -109,39 +109,45 @@ async function getOptionChain(ticker) {
 
 async function getOptionChartData(optionTicker) {
   await sleep(12000);
-  document.querySelector("#chart").innerHTML = '';
+  const chartDiv = document.querySelector("#chart");
+  chartDiv.innerHTML = '';
   chartData = [];
   candleData.series = [];
   try {
     const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-02', false, 'desc', 50000);
-    chartData = data.results;
-    candleData.series.push(
-      {
-        name: 'line',
-        type: 'line',
-        data: chartData.map(data => new Object(
-          {
-            x: new Date(data.t),
-            y: data.c
-          }
-        ))
-      }
-    );
-    candleData.series.push(
-      {
-        name: 'candle',
-        type: 'candlestick',
-        data: chartData.map(data => new Object(
-          {
-            x: new Date(data.t),
-            y: [data.o, data.h, data.l, data.c]
-          }
-        ))
-      }
-    );
-    candleData.title.text = `${optionTicker} Trading History`;
-    let chart = new ApexCharts(document.querySelector("#chart"), candleData);
-    chart.render();
+    if (data && data.results && data.results.length > 0) {
+      chartData = data.results;
+      candleData.series.push(
+        {
+          name: 'line',
+          type: 'line',
+          data: chartData.map(data => new Object(
+            {
+              x: new Date(data.t),
+              y: data.c
+            }
+          ))
+        }
+      );
+      candleData.series.push(
+        {
+          name: 'candle',
+          type: 'candlestick',
+          data: chartData.map(data => new Object(
+            {
+              x: new Date(data.t),
+              y: [data.o, data.h, data.l, data.c]
+            }
+          ))
+        }
+      );
+      candleData.title.text = `${optionTicker} Trading History`;
+      let chart = new ApexCharts(chartDiv, candleData);
+      chart.render();
+    } else {
+      chartDiv.innerHTML = 'No data from polygon.io to display.';
+      console.error('getOptionChartData :: An error occured while fetching and displaying option chart candlestick data; no data returned from API');
+    }
   } catch (e) {
     console.error('getOptionChartData :: An error occured while fetching and displaying option chart candlestick data:', e);
   }
@@ -209,6 +215,7 @@ async function getUnderlying(ticker) {
   expirations = [];
   chartData = [];
   candleData.series = [];
+  await sleep(12000);
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
   await sleep(12000);
