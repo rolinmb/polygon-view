@@ -2,6 +2,9 @@ Simple web applictaion to fetch and parse data from the polygon.io options API u
 
 You must use your own polygon.io API key as shown in dummy_utils.js (really you need to create your own file named 'src/utils.js' with your API key).
 
+TODO:
+    - getOptionChartData fails on the second and consecutive tries (ApexCharts start to look funky and then it fails all together) 
+
 To run in terminal: node src/main.js (will not work with ApexCharts functionality left uncommented; recommend to build then open dist/index.html in Google Chrome)
 
 To build src/main.js with Webpack into dist/app.js: npm run prod

@@ -9,13 +9,13 @@ function sleep(ms) {
 
 const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
 const chainLabels = ['Type', 'Ticker', 'Expiry', 'Strike'];
-const optionChain = {
+let optionChain = {
   Calls: {},
   Puts: {},
 };
 let expirations = [];
 let chartData = [];
-const candleData = {
+let candleData = {
   series: [],
   chart: {
     type: 'line',
@@ -40,7 +40,7 @@ const candleData = {
 
 async function getChainExpirations(ticker) {
   document.querySelector("#chain-wrap").innerHTML = '';
-  expirations.length = 0;
+  expirations = [];
   let query = {
     'underlying_ticker': ticker,
     'contract_type': 'call',
@@ -108,11 +108,12 @@ async function getOptionChain(ticker) {
 }
 
 async function getOptionChartData(optionTicker) {
+  await sleep(12000);
   document.querySelector("#chart").innerHTML = '';
-  chartData.length = 0
-  candleData.series.length = 0;
+  chartData = [];
+  candleData.series = [];
   try {
-    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-01', false, 'desc', 50000);
+    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-02', false, 'desc', 50000);
     chartData = data.results;
     candleData.series.push(
       {
@@ -195,7 +196,6 @@ async function test() {
   await getOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
   displayOptionChain();
-  await sleep(12000);
   const optionTicker = optionChain.Calls['2024-12-20'][0]['ticker'];
   await getOptionChartData(optionTicker);
   console.log(`\nSuccessfully fetched chart data for option contract ${optionTicker}\n`);
@@ -206,9 +206,9 @@ async function getUnderlying(ticker) {
   document.querySelector("#chain-wrap").innerHTML = '';
   optionChain.Calls = {};
   optionChain.Puts = {};
-  expirations.length = 0;
-  chartData.length = 0;
-  candleData.series.length = 0;
+  expirations = [];
+  chartData = [];
+  candleData.series = [];
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
   await sleep(12000);
