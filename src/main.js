@@ -7,8 +7,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-//const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
-const ticker = 'DIA';
+const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
 let optionChain = {
   'Calls': {},
   'Puts': {},
@@ -83,7 +82,7 @@ let candleData = {
   }
 };*/
 
-async function getChainExpirations() {
+async function getChainExpirations(ticker) {
   let query = {
     'underlying_ticker': ticker,
     'contract_type': 'call',
@@ -98,11 +97,11 @@ async function getChainExpirations() {
       expirations.push(contract['expiration_date']);
     });
   } catch (e) {
-    console.error('An error occured while fetching option chain expirations:', e);
+    console.error('getChainExpirations :: An error occured while fetching option chain expirations:', e);
   }
 }
 
-async function fetchOptionChain() {
+async function fetchOptionChain(ticker) {
   for (const expiry of expirations) {
     let query = {
       'underlying_ticker': ticker,
@@ -125,7 +124,7 @@ async function fetchOptionChain() {
         }
       ));
     } catch (e) {
-      console.error('An error occurred while fetching call options:', e);
+      console.error('fetchOptionChain :: An error occurred while fetching call options:', e);
     }
     query['contract_type'] = 'put';
     await sleep(12000);
@@ -141,7 +140,7 @@ async function fetchOptionChain() {
         }
       ));
     } catch (e) {
-      console.error('An error occurred while fetching put options:', e);
+      console.error('fetchOptionChain :: An error occurred while fetching put options:', e);
     }
     await sleep(12000);
   }
@@ -152,15 +151,16 @@ async function getOptionChartData(optionTicker) {
     const data = await polygon.options.aggregates(optionTicker, 1, "day", "2020-01-01", "2024-07-01", false, "desc", 50000);
     chartData = data.results;
   } catch (e) {
-    console.error("An error occured while fetching option chart data:", e);
+    console.error("getOptionChartData :: An error occured while fetching option chart data:", e);
   }
 }
 
 async function main() {
-  await getChainExpirations();
+  let ticker = tickers[0];
+  await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
   await sleep(12000);
-  await fetchOptionChain();
+  await fetchOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
   await sleep(12000);
   const optionTicker = optionChain['Calls']['2024-12-20'][0]['ticker'];
