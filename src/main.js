@@ -1,7 +1,7 @@
 import { restClient } from '@polygon.io/client-js';
 import { API_KEY } from './utils.mjs';
 const polygon = restClient(API_KEY);
-//import ApexCharts from 'apexcharts';
+import ApexCharts from 'apexcharts';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
