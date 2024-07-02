@@ -6,8 +6,8 @@ import ApexCharts from 'apexcharts';
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
-// Seems to only allow SPY / QQQ / DIA / IWM etf tickers with free API access
-//const tickers = ['DIA', 'IWM', 'QQQ', 'SPY'];
+
+//const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
 const ticker = 'DIA';
 let optionChain = {
   'Calls': {},
@@ -165,7 +165,7 @@ async function main() {
   await sleep(12000);
   const optionTicker = optionChain['Calls']['2024-12-20'][0]['ticker'];
   await getOptionChartData(optionTicker);
-  console.log(`Successfully fetched chart data for option contract ${optionTicker}`);
+  console.log(`\nSuccessfully fetched chart data for option contract ${optionTicker}\n`);
   candleData.series.push(
     {
       name: 'line',
