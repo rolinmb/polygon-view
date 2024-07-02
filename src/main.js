@@ -13,8 +13,8 @@ const optionChain = {
   Calls: {},
   Puts: {},
 };
-var expirations = [];
-var chartData = [];
+let expirations = [];
+let chartData = [];
 const candleData = {
   series: [],
   chart: {
@@ -38,52 +38,9 @@ const candleData = {
   }
 };
 
-/*var testData  = {
-  series: [
-    {
-      data: [
-        {
-          x: new Date(1538778600000),
-          y: [6629.81, 6650.5, 6623.04, 6633.33]
-        },
-        {
-          x: new Date(1538780400000),
-          y: [6632.01, 6643.59, 6620, 6630.11]
-        },
-        {
-          x: new Date(1538782200000),
-          y: [6630.71, 6648.95, 6623.34, 6635.65]
-        },
-        {
-          x: new Date(1538784000000),
-          y: [6635.65, 6651, 6629.67, 6638.24]
-        },
-        {
-          x: new Date(1538785800000),
-          y: [6638.24, 6640, 6620, 6624.47]
-        },
-      ]
-    }
-  ],
-  chart: {
-    type: 'candlestick',
-    height: 350
-  },
-  title: {
-    text: 'CandleStick Chart Test',
-    align: 'left'
-  },
-  xaxis: {
-    type: 'datetime'
-  },
-  yaxis: {
-    tooltip: {
-      enabled: true
-    }
-  }
-};*/
-
 async function getChainExpirations(ticker) {
+  document.querySelector("#chain-wrap").innerHTML = '';
+  expirations.length = 0;
   let query = {
     'underlying_ticker': ticker,
     'contract_type': 'call',
@@ -102,7 +59,10 @@ async function getChainExpirations(ticker) {
   }
 }
 
-async function fetchOptionChain(ticker) {
+async function getOptionChain(ticker) {
+  document.querySelector("#chain-wrap").innerHTML = '';
+  optionChain.Calls = {};
+  optionChain.Puts = {};
   for (const expiry of expirations) {
     let query = {
       'underlying_ticker': ticker,
@@ -125,7 +85,7 @@ async function fetchOptionChain(ticker) {
         }
       ));
     } catch (e) {
-      console.error('fetchOptionChain :: An error occurred while fetching call options:', e);
+      console.error('getOptionChain :: An error occurred while fetching call options:', e);
     }
     query['contract_type'] = 'put';
     await sleep(12000);
@@ -141,18 +101,48 @@ async function fetchOptionChain(ticker) {
         }
       ));
     } catch (e) {
-      console.error('fetchOptionChain :: An error occurred while fetching put options:', e);
+      console.error('getOptionChain :: An error occurred while fetching put options:', e);
     }
     await sleep(12000);
   }
 }
 
 async function getOptionChartData(optionTicker) {
+  document.querySelector("#chart").innerHTML = '';
+  chartData.length = 0
+  candleData.series.length = 0;
   try {
     const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-01', false, 'desc', 50000);
     chartData = data.results;
+    candleData.series.push(
+      {
+        name: 'line',
+        type: 'line',
+        data: chartData.map(data => new Object(
+          {
+            x: new Date(data.t),
+            y: data.c
+          }
+        ))
+      }
+    );
+    candleData.series.push(
+      {
+        name: 'candle',
+        type: 'candlestick',
+        data: chartData.map(data => new Object(
+          {
+            x: new Date(data.t),
+            y: [data.o, data.h, data.l, data.c]
+          }
+        ))
+      }
+    );
+    candleData.title.text = `${optionTicker} Trading History`;
+    let chart = new ApexCharts(document.querySelector("#chart"), candleData);
+    chart.render();
   } catch (e) {
-    console.error('getOptionChartData :: An error occured while fetching option chart data:', e);
+    console.error('getOptionChartData :: An error occured while fetching and displaying option chart candlestick data:', e);
   }
 }
 
@@ -169,7 +159,7 @@ function displayOptionChain() {
   }); 
   tHead.appendChild(headerRow);
   table.appendChild(tHead);
-  const tBody = doucment.createElement('tbody');
+  const tBody = document.createElement('tbody');
   const addRow = (type, option) => {
     const newRow = document.createElement('tr');
     const typeTd = document.createElement('td');
@@ -177,12 +167,13 @@ function displayOptionChain() {
     newRow.appendChild(typeTd);
     const tickerTd = document.createElement('td');
     tickerTd.textContent = option.ticker;
+    tickerTd.onclick = () => getOptionChartData(option.ticker);
     newRow.appendChild(tickerTd);
     const expiryTd = document.createElement('td');
-    expiryTd = option.expiry;
+    expiryTd.textContent = option.expiry;
     newRow.appendChild(expiryTd);
     const strikeTd = document.createElement('td');
-    strikeTd = option.strike;
+    strikeTd.textContent = option.strike;
     newRow.appendChild(strikeTd);
     tBody.appendChild(newRow);
   };
@@ -197,55 +188,31 @@ function displayOptionChain() {
 }
 
 async function test() {
-  document.querySelector('#chart').innerHTML = '';
-  document.querySelector('#chain-wrap').innerHTML = '';
   let ticker = tickers[0];
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
   await sleep(12000);
-  await fetchOptionChain(ticker);
+  await getOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
+  displayOptionChain();
   await sleep(12000);
   const optionTicker = optionChain.Calls['2024-12-20'][0]['ticker'];
   await getOptionChartData(optionTicker);
   console.log(`\nSuccessfully fetched chart data for option contract ${optionTicker}\n`);
-  candleData.series.push(
-    {
-      name: 'line',
-      type: 'line',
-      data: chartData.map(data => new Object(
-        {
-          x: new Date(data.t),
-          y: data.c
-        }
-      ))
-    }
-  );
-  candleData.series.push(
-    {
-      name: 'candle',
-      type: 'candlestick',
-      data: chartData.map(data => new Object(
-        {
-          x: new Date(data.t),
-          y: [data.o, data.h, data.l, data.c]
-        }
-      ))
-    }
-  );
-  candleData.title.text = `${optionTicker} Trading History`;
-  var chart = new ApexCharts(document.querySelector("#chart"), candleData);
-  chart.render();
-  displayOptionChain();
 }
 
 async function getUnderlying(ticker) {
   document.querySelector("#chart").innerHTML = '';
   document.querySelector("#chain-wrap").innerHTML = '';
+  optionChain.Calls = {};
+  optionChain.Puts = {};
+  expirations.length = 0;
+  chartData.length = 0;
+  candleData.series.length = 0;
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
   await sleep(12000);
-  await fetchOptionChain(ticker);
+  await getOptionChain(ticker);
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
   displayOptionChain();
 }
@@ -254,15 +221,15 @@ function initUi() {
   const tickerList = document.querySelector('#tickers-list');
   tickers.forEach(tkr => {
     const tickerLi = document.createElement('li');
-    tickerLi.innerHTML = tkr;
+    tickerLi.textContent = tkr;
     tickerLi.onclick = () => getUnderlying(tkr);
     tickerList.appendChild(tickerLi);
   });
 }
 
 window.onload = function() {
-  initUi();/*
-  test().catch(e => {
+  initUi();
+  /*test().catch(e => {
     console.error('main.js :: main() function failed to load and/or execute:', e);
   });*/
 }
