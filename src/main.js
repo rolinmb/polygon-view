@@ -8,13 +8,13 @@ function sleep(ms) {
 }
 
 const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
-let optionChain = {
+const optionChain = {
   'Calls': {},
   'Puts': {},
 };
 let expirations = [];
 let chartData = [];
-let candleData = {
+const candleData = {
   series: [],
   chart: {
     type: 'line',
@@ -155,8 +155,13 @@ async function getOptionChartData(optionTicker) {
   }
 }
 
+function displayOptionChain() {
+  const chainWrap = document.querySelector("#chain-wrap");
+}
+
 async function test() {
   document.querySelector("#chart").innerHTML = '';
+  document.querySelector("#chain-wrap").innerHTML = '';
   let ticker = tickers[0];
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
@@ -194,20 +199,33 @@ async function test() {
   candleData.title.text = `${optionTicker} Trading History`;
   var chart = new ApexCharts(document.querySelector("#chart"), candleData);
   chart.render();
+  //displayOptionChain();
+}
+
+async function getUnderlying(ticker) {
+  document.querySelector("#chart").innerHTML = '';
+  document.querySelector("#chain-wrap").innerHTML = '';
+  await getChainExpirations(ticker);
+  console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
+  await sleep(12000);
+  await fetchOptionChain(ticker);
+  console.log(`\nFetched ${ticker} Full Option Chain\n`);
+  //displayOptionChain();
 }
 
 function initUi() {
   const tickerList = document.querySelector('#tickers-list');
   tickers.forEach(tkr => {
     const tickerLi = document.createElement('li');
-    tickerLi.innerHTML = `<a>${tkr}</a>`;
+    tickerLi.innerHTML = tkr;
+    tickerLi.onclick = () => getUnderlying(tkr);
     tickerList.appendChild(tickerLi);
   });
 }
 
 window.onload = function() {
-  initUi();
+  initUi();/*
   test().catch(e => {
-    console.error("main.js :: main() function failed to load and/or execute:", e);
-  });
+    console.error('main.js :: main() function failed to load and/or execute:', e);
+  });*/
 }
