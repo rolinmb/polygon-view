@@ -12,8 +12,8 @@ const optionChain = {
   'Calls': {},
   'Puts': {},
 };
-let expirations = [];
-let chartData = [];
+var expirations = [];
+var chartData = [];
 const candleData = {
   series: [],
   chart: {
