@@ -7,6 +7,7 @@ function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 // Seems to only allow SPY / QQQ / DIA / IWM etf tickers with free API access
+//const tickers = ['DIA', 'IWM', 'QQQ', 'SPY'];
 const ticker = 'DIA';
 let optionChain = {
   'Calls': {},
@@ -14,6 +15,73 @@ let optionChain = {
 };
 let expirations = [];
 let chartData = [];
+let candleData = {
+  series: [],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  title: {
+    text: 'Option Contract Candlestick Chart',
+    align: 'left'
+  },
+  stroke: {
+    width: [3, 1]
+  },
+  xaxis: {
+    type: 'datetime'
+  },
+  yaxis: {
+    tooltip: {
+      enabled: true
+    }
+  }
+};
+
+/*var testData  = {
+  series: [
+    {
+      data: [
+        {
+          x: new Date(1538778600000),
+          y: [6629.81, 6650.5, 6623.04, 6633.33]
+        },
+        {
+          x: new Date(1538780400000),
+          y: [6632.01, 6643.59, 6620, 6630.11]
+        },
+        {
+          x: new Date(1538782200000),
+          y: [6630.71, 6648.95, 6623.34, 6635.65]
+        },
+        {
+          x: new Date(1538784000000),
+          y: [6635.65, 6651, 6629.67, 6638.24]
+        },
+        {
+          x: new Date(1538785800000),
+          y: [6638.24, 6640, 6620, 6624.47]
+        },
+      ]
+    }
+  ],
+  chart: {
+    type: 'candlestick',
+    height: 350
+  },
+  title: {
+    text: 'CandleStick Chart Test',
+    align: 'left'
+  },
+  xaxis: {
+    type: 'datetime'
+  },
+  yaxis: {
+    tooltip: {
+      enabled: true
+    }
+  }
+};*/
 
 async function getChainExpirations() {
   let query = {
@@ -65,7 +133,8 @@ async function fetchOptionChain() {
       const putData = await polygon.reference.optionsContracts(query);
       console.log(`Fetched ${ticker} ${expiry} Puts`);
       //console.log(putData.results);
-      optionChain['Puts'][expiry] = putData.results.map(put => new Object({
+      optionChain['Puts'][expiry] = putData.results.map(put => new Object(
+        {
           'ticker': put.ticker,
           'expiry': put.expiration_date,
           'strike': put.strike_price,
@@ -87,51 +156,6 @@ async function getOptionChartData(optionTicker) {
   }
 }
 
-var testData  = {
-  series: [
-    {
-      data: [
-        {
-          x: new Date(1538778600000),
-          y: [6629.81, 6650.5, 6623.04, 6633.33]
-        },
-        {
-          x: new Date(1538780400000),
-          y: [6632.01, 6643.59, 6620, 6630.11]
-        },
-        {
-          x: new Date(1538782200000),
-          y: [6630.71, 6648.95, 6623.34, 6635.65]
-        },
-        {
-          x: new Date(1538784000000),
-          y: [6635.65, 6651, 6629.67, 6638.24]
-        },
-        {
-          x: new Date(1538785800000),
-          y: [6638.24, 6640, 6620, 6624.47]
-        },
-      ]
-    }
-  ],
-  chart: {
-    type: 'candlestick',
-    height: 350
-  },
-  title: {
-    text: 'CandleStick Chart Test',
-    align: 'left'
-  },
-  xaxis: {
-    type: 'datetime'
-  },
-  yaxis: {
-    tooltip: {
-      enabled: true
-    }
-  }
-};
-
 async function main() {
   await getChainExpirations();
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
@@ -140,12 +164,39 @@ async function main() {
   console.log(`\nFetched ${ticker} Full Option Chain\n`);
   await sleep(12000);
   const optionTicker = optionChain['Calls']['2024-12-20'][0]['ticker'];
-  console.log(`Successfully fetched chart data for option contract ${optionTicker}`);
   await getOptionChartData(optionTicker);
-  console.log(chartData);
-  // TODO: parse chartData into a format that works with ApexCharts
-  var chart = new ApexCharts(document.querySelector("#chart"), testData);
+  console.log(`Successfully fetched chart data for option contract ${optionTicker}`);
+  candleData.series.push(
+    {
+      name: 'line',
+      type: 'line',
+      data: chartData.map(data => new Object(
+        {
+          x: new Date(data.t),
+          y: data.c
+        }
+      ))
+    }
+  );
+  candleData.series.push(
+    {
+      name: 'candle',
+      type: 'candlestick',
+      data: chartData.map(data => new Object(
+        {
+          x: new Date(data.t),
+          y: [data.o, data.h, data.l, data.c]
+        }
+      ))
+    }
+  );
+  candleData.title.text = `${optionTicker} Trading History`;
+  var chart = new ApexCharts(document.querySelector("#chart"), candleData);
   chart.render();
 }
 
-main();
+window.onload = function() {
+  main().catch(e => {
+    console.error("main.js :: main() function failed to load and/or execute:", e);
+  });
+}
