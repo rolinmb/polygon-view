@@ -1,17 +1,19 @@
 import { restClient } from '@polygon.io/client-js';
 import { API_KEY } from './utils.mjs';
 const polygon = restClient(API_KEY);
+//import ApexCharts from 'apexcharts';
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 // Seems to only allow SPY / QQQ / DIA / IWM etf tickers with free API access
 const ticker = 'DIA';
-const optionChain = {
+let optionChain = {
   'Calls': {},
   'Puts': {},
 };
-var expirations = [];
+let expirations = [];
+let chartData = [];
 
 async function getChainExpirations() {
   let query = {
@@ -23,8 +25,8 @@ async function getChainExpirations() {
     'sort': 'expiration_date',
   };
   try {
-    const data = await polygon.reference.optionsContracts(query);
-    data.results.forEach(contract => {
+    const expiryData = await polygon.reference.optionsContracts(query);
+    expiryData.results.forEach(contract => {
       expirations.push(contract['expiration_date']);
     });
   } catch (e) {
@@ -47,7 +49,7 @@ async function fetchOptionChain() {
       const callData = await polygon.reference.optionsContracts(query);
       console.log(`Fetched ${ticker} ${expiry} Calls`);
       //console.log(callData.results);
-      optionChain['Calls'][expiry] = callData.results.map(call => new Object(
+      optionChain['Calls'][expiry] = callData.results.map(call => (
         {
           'ticker': call.ticker,
           'expiry': call.expiration_date,
@@ -76,26 +78,74 @@ async function fetchOptionChain() {
   }
 }
 
-async function getOptionChartData(ticker) {
-  polygon.options.aggregates(ticker, 1, "day", "2020-01-01", "2024-06-29", false, "desc", 50000).then(data => {
-    console.log(`Successfully fetched chart data for option contract ${ticker}`)
-    console.log(data);
-  }).catch(e => {
+async function getOptionChartData(optionTicker) {
+  try {
+    const data = await polygon.options.aggregates(optionTicker, 1, "day", "2020-01-01", "2024-07-01", false, "desc", 50000);
+    chartData = data.results;
+  } catch (e) {
     console.error("An error occured while fetching option chart data:", e);
-  });
+  }
 }
 
-getChainExpirations().then(() => {
-  console.log('\nFetched '+ticker+' Option Chain Expirations\n');
-  sleep(12000).then(() => {
-    fetchOptionChain().then(() => {
-      console.log('\nFetched '+ticker+' Full Option Chain:\n');
-      console.log('\n'+ticker+' Calls:\n', optionChain['Calls']);
-      console.log('\n'+ticker+' Puts:\n', optionChain['Puts']);
-      sleep(12000).then(() => {
-        console.log('\nFetched option chart data:\n');
-        getOptionChartData(optionChain['Calls']['2024-12-20'][0]['ticker']); // testing fetching option chart data
-      });  
-    });
-  });
-});
+var testData  = {
+  series: [
+    {
+      data: [
+        {
+          x: new Date(1538778600000),
+          y: [6629.81, 6650.5, 6623.04, 6633.33]
+        },
+        {
+          x: new Date(1538780400000),
+          y: [6632.01, 6643.59, 6620, 6630.11]
+        },
+        {
+          x: new Date(1538782200000),
+          y: [6630.71, 6648.95, 6623.34, 6635.65]
+        },
+        {
+          x: new Date(1538784000000),
+          y: [6635.65, 6651, 6629.67, 6638.24]
+        },
+        {
+          x: new Date(1538785800000),
+          y: [6638.24, 6640, 6620, 6624.47]
+        },
+      ]
+    }
+  ],
+  chart: {
+    type: 'candlestick',
+    height: 350
+  },
+  title: {
+    text: 'CandleStick Chart Test',
+    align: 'left'
+  },
+  xaxis: {
+    type: 'datetime'
+  },
+  yaxis: {
+    tooltip: {
+      enabled: true
+    }
+  }
+};
+
+async function main() {
+  await getChainExpirations();
+  console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
+  await sleep(12000);
+  await fetchOptionChain();
+  console.log(`\nFetched ${ticker} Full Option Chain\n`);
+  await sleep(12000);
+  const optionTicker = optionChain['Calls']['2024-12-20'][0]['ticker'];
+  console.log(`Successfully fetched chart data for option contract ${optionTicker}`);
+  await getOptionChartData(optionTicker);
+  console.log(chartData);
+  // TODO: parse chartData into a format that works with ApexCharts
+  var chart = new ApexCharts(document.querySelector("#chart"), testData);
+  chart.render();
+}
+
+main();

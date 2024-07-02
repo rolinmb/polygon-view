@@ -15,6 +15,7 @@
     "@polygon.io/client-js": "^7.3.2"
   },
   "devDependencies": {
+    "apexcharts": "^3.49.2",
     "webpack": "^5.92.1",
     "webpack-cli": "^5.1.4"
   }
