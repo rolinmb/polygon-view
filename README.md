@@ -3,7 +3,7 @@ Simple web applictaion to fetch and parse data from the polygon.io options API u
 You must use your own polygon.io API key as shown in dummy_utils.js (really you need to create your own file named 'src/utils.js' with your API key).
 
 TODO:
-    - getOptionChartData fails on the second and consecutive tries (ApexCharts start to look funky and then it fails all together) 
+    - prevent overlapping requests by user if I want to make this a big boy application
 
 To run in terminal: node src/main.js (will not work with ApexCharts functionality left uncommented; recommend to build then open dist/index.html in Google Chrome)
 
