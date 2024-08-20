@@ -37,6 +37,29 @@ let optionApexCandleData = {
     }
   }
 };
+let underlyingChartData = [];
+let underlyingApexCandleData = {
+  series: [],
+  chart: {
+    type: 'line',
+    height: 350
+  },
+  title: {
+    text: 'Underlying Candlestick Chart',
+    align: 'left'
+  },
+  stroke: {
+    width: [3, 1]
+  },
+  xaxis: {
+    type: 'datetime'
+  },
+  yaxis: {
+    tooltip: {
+      enabled: true
+    }
+  }
+};
 
 async function getChainExpirations(ticker) {
   document.querySelector("#chain-wrap").innerHTML = '';
@@ -114,7 +137,7 @@ async function getOptionChartData(optionTicker) {
   optionChartData = [];
   optionApexCandleData.series = [];
   try {
-    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-08-19', false, 'desc', 50000);
+    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-08-19', true, 'desc', 50000);
     if (data && data.results && data.results.length > 0) {
       optionChartData = data.results;
       optionApexCandleData.series.push(
@@ -141,9 +164,9 @@ async function getOptionChartData(optionTicker) {
           ))
         }
       );
-      optionApexCandleData.title.text = `${optionTicker} Trading History`;
-      let chart = new ApexCharts(optionChartDiv, optionApexCandleData);
-      chart.render();
+      optionApexCandleData.title.text = `${optionTicker} Daily Trading History`;
+      let optionChart = new ApexCharts(optionChartDiv, optionApexCandleData);
+      optionChart.render();
     } else {
       optionChartDiv.innerHTML = 'No data from polygon.io to display.';
       console.error('getOptionChartData :: An error occured while fetching and displaying option chart candlestick data; no data returned from API');
@@ -207,6 +230,52 @@ async function test() {
   console.log(`\nSuccessfully fetched chart data for option contract ${optionTicker}\n`);
 }
 
+async function getUnderlyingCandlestickData(ticker) {
+  await sleep(12000);
+  const underlyingChartDiv = document.querySelector("#underlying-chart");
+  underlyingChartDiv.innerHTML = '';
+  underlyingChartData = [];
+  underlyingApexCandleData.series = [];
+  try {
+    let data = polygon.stocks.aggregates(ticker, 1, 'day', '1945-01-01', '2024-08-19', true, 'desc', 50000);
+    if (data && data.results && data.results.length > 0) {
+      underlyingChartData = data.results;
+      underlyingApexCandleData.series.push(
+        {
+          name: 'line',
+          type: 'line',
+          data: underlyingChartData.map(data => new Object(
+            {
+              x: new Date(data.t),
+              y: data.c
+            }
+          ))
+        }
+      );
+      underlyingApexCandleData.series.push(
+        {
+          name: 'candle',
+          type: 'candlestick',
+          data: underlyingChartData.map(data => new Object(
+            {
+              x: new Date(data.t),
+              y: [data.o, data.h, data.l, data.c]
+            }
+          ))
+        }
+      );
+      underlyingApexCandleData.title.text = `${ticker} Daily Trading History`;
+      let underlyingChart = ApexCharts(underlyingChartDiv, underlyingApexCandleData);
+      underlyingChart.render();
+    } else {
+      underlyingChartDiv.innerHTML = 'No data from polygon.io to display.';
+      console.error('getUnderlyingCandlestickData :: An error occured while fetching and displaying underlying candlestick data; no data returned from API');
+    }
+  } catch (e) {
+    console.error('getUnderlyingCandlestickData :: An error occured while fetching and displaying underlying candlestick data:', e);
+  }
+}
+
 async function getUnderlying(ticker) {
   document.querySelector("#underlying-chart").innerHTML = '';
   document.querySelector("#option-chart").innerHTML = '';
@@ -216,6 +285,8 @@ async function getUnderlying(ticker) {
   expirations = [];
   optionChartData = [];
   optionApexCandleData.series = [];
+  await sleep(12000);
+  getUnderlyingCandlestickData(ticker);
   await sleep(12000);
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
