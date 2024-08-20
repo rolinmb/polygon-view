@@ -8,7 +8,7 @@ function sleep(ms) {
 }
 
 const tickers = ['DIA', 'IWM', 'QQQ', 'SPY']; // Only available with free API access
-const chainLabels = ['Type', 'Ticker', 'Expiry', 'Strike'];
+const chainLabels = ['Type', 'Contract Ticker', 'Expiry', 'Strike'];
 let optionChain = {
   Calls: {},
   Puts: {},
