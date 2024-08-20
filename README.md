@@ -5,6 +5,7 @@ You must use your own polygon.io API key as shown in dummy_utils.js (really you 
 BUILD: execute "npm run prod" in terminal then open dist/index.html in a browser (preferably Google Chrome / Chromium)
 
 TODO:
+    - unsuccessful in fetching underlying candlestick data from API at the moment
     - prevent overlapping requests by user if I want to make this a big boy application
 
 Not financial advice; using this program for financial insight will be done so at your own risk.

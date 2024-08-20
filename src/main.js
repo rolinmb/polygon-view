@@ -237,7 +237,7 @@ async function getUnderlyingCandlestickData(ticker) {
   underlyingChartData = [];
   underlyingApexCandleData.series = [];
   try {
-    let data = polygon.stocks.aggregates(ticker, 1, 'day', '2020-01-01', '2024-08-19', true, 'desc', 50000);
+    let data = polygon.stocks.aggregates(ticker, 1, 'day', '2020-01-01', '2024-08-19', 'desc');
     if (data && data.results && data.results.length > 0) {
       underlyingChartData = data.results;
       underlyingApexCandleData.series.push(
