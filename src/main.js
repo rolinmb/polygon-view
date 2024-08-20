@@ -14,8 +14,8 @@ let optionChain = {
   Puts: {},
 };
 let expirations = [];
-let chartData = [];
-let candleData = {
+let optionChartData = [];
+let optionApexCandleData = {
   series: [],
   chart: {
     type: 'line',
@@ -109,19 +109,19 @@ async function getOptionChain(ticker) {
 
 async function getOptionChartData(optionTicker) {
   await sleep(12000);
-  const chartDiv = document.querySelector("#chart");
-  chartDiv.innerHTML = '';
-  chartData = [];
-  candleData.series = [];
+  const optionChartDiv = document.querySelector("#option-chart");
+  optionChartDiv.innerHTML = '';
+  optionChartData = [];
+  optionApexCandleData.series = [];
   try {
-    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-07-02', false, 'desc', 50000);
+    const data = await polygon.options.aggregates(optionTicker, 1, 'day', '2020-01-01', '2024-08-19', false, 'desc', 50000);
     if (data && data.results && data.results.length > 0) {
-      chartData = data.results;
-      candleData.series.push(
+      optionChartData = data.results;
+      optionApexCandleData.series.push(
         {
           name: 'line',
           type: 'line',
-          data: chartData.map(data => new Object(
+          data: optionChartData.map(data => new Object(
             {
               x: new Date(data.t),
               y: data.c
@@ -129,11 +129,11 @@ async function getOptionChartData(optionTicker) {
           ))
         }
       );
-      candleData.series.push(
+      optionApexCandleData.series.push(
         {
           name: 'candle',
           type: 'candlestick',
-          data: chartData.map(data => new Object(
+          data: optionChartData.map(data => new Object(
             {
               x: new Date(data.t),
               y: [data.o, data.h, data.l, data.c]
@@ -141,11 +141,11 @@ async function getOptionChartData(optionTicker) {
           ))
         }
       );
-      candleData.title.text = `${optionTicker} Trading History`;
-      let chart = new ApexCharts(chartDiv, candleData);
+      optionApexCandleData.title.text = `${optionTicker} Trading History`;
+      let chart = new ApexCharts(optionChartDiv, optionApexCandleData);
       chart.render();
     } else {
-      chartDiv.innerHTML = 'No data from polygon.io to display.';
+      optionChartDiv.innerHTML = 'No data from polygon.io to display.';
       console.error('getOptionChartData :: An error occured while fetching and displaying option chart candlestick data; no data returned from API');
     }
   } catch (e) {
@@ -208,13 +208,14 @@ async function test() {
 }
 
 async function getUnderlying(ticker) {
-  document.querySelector("#chart").innerHTML = '';
+  document.querySelector("#underlying-chart").innerHTML = '';
+  document.querySelector("#option-chart").innerHTML = '';
   document.querySelector("#chain-wrap").innerHTML = '';
   optionChain.Calls = {};
   optionChain.Puts = {};
   expirations = [];
-  chartData = [];
-  candleData.series = [];
+  optionChartData = [];
+  optionApexCandleData.series = [];
   await sleep(12000);
   await getChainExpirations(ticker);
   console.log(`\nFetched ${ticker} Option Chain Expirations\n`);
